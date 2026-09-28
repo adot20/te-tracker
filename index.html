@@ -1,0 +1,87 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TE Tracker</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><meta name="theme-color" content="#16213e">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+:root{--bg:#eef1f6;--cd:#fff;--tx:#16213e;--mu:#66708a;--ac:#16213e;--am:#c97800;--bd:#d5dbe8;--ok:#0b7a4b;--bad:#b3261e}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1526;--cd:#182039;--tx:#e6eaf5;--mu:#93a0c0;--ac:#e6eaf5;--am:#f5b041;--bd:#2a3556;--ok:#4cd694;--bad:#ff8a80}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:600px;margin:auto;padding:14px 14px 40px}h1{font-size:22px;margin:8px 0 12px}
+.cd{background:var(--cd);border:1px solid var(--bd);border-radius:10px;padding:12px;margin:0 0 10px}
+input,select,button{font:inherit;color:inherit;width:100%;padding:11px;border:1px solid var(--bd);border-radius:8px;background:var(--cd);margin:0 0 8px}
+button{cursor:pointer;width:auto;font-weight:600}button.p{background:var(--ac);color:var(--bg);border-color:var(--ac);width:100%}
+.r{display:flex;gap:8px}.r>*{flex:1;min-width:0}label{display:block;font-size:13px;color:var(--mu);margin:0 0 3px}
+.t{display:flex;justify-content:space-between;gap:8px}.mu{color:var(--mu);font-size:13px}.am{color:var(--am);font-weight:700}
+.tk{border-left:5px solid var(--am)}.tk .t{padding:3px 0}.tk hr{border:0;border-top:2px dashed var(--bd);margin:8px 0}
+.big{font-size:26px;font-weight:800}.w{color:var(--bad);font-size:13px}a.b{color:var(--mu);cursor:pointer}
+input:focus,select:focus,button:focus{outline:2px solid var(--am)}
+</style></head><body><main id="app"></main>
+<script>
+const $=s=>document.querySelector(s),K='te_data',FOOD=['Breakfast','Lunch','Dinner','Snacks','Food'],
+TRV=['Metro','Namo Bharat Metro','Auto','Rapido Bike','Uber','Train','Bus','Other'],PAY={upi:'UPI',cc:'Credit card',cash:'Cash'};
+let D=JSON.parse(localStorage.getItem(K)||'{"trips":[],"cust":{}}'),cur=null,eid=null,last={pay:'upi',date:''};
+const save=()=>localStorage.setItem(K,JSON.stringify(D)),
+esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),
+inr=n=>'₹'+(Math.round(n*100)/100),today=()=>new Date().toLocaleDateString('en-CA'),
+diff=t=>t.start&&t.end?Math.round((new Date(t.end)-new Date(t.start))/864e5):0,
+days=t=>t.days??Math.max(1,diff(t)),
+desc=l=>FOOD.includes(l.cat)?l.cat+(l.det?` (${l.det})`:''):(l.from||l.to?`${l.cat} from ${l.from} to ${l.to}`:l.cat);
+function calc(t){const out=t.type=='out',used={},rows=[];let sav=0,food=0,fc=0,n=0;
+ [...t.lines].sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id).forEach(l=>{
+  sav+=l.saved||0;const f=FOOD.includes(l.cat);if(f)food+=l.amt;if(f&&out)return rows.push({l,skip:1,why:'Not in Excel (portal pays allowance)'});
+  let c=l.amt,tr=0;if(f){const u=used[l.date]||0;c=Math.max(0,Math.min(l.amt,300-u));used[l.date]=u+c;tr=c<l.amt;fc+=c}
+  if(c<=0)return rows.push({l,skip:1,why:'Over ₹300 daily food cap, not exported'});
+  rows.push({l,c,tr,bill:l.pay=='cash'?'cash':l.bill?++n:''})});
+ const claim=rows.reduce((s,r)=>s+(r.c||0),0),allow=out?550*days(t):0;
+ return{rows,claim,allow,sav,food,fr:food?(out?allow-food:fc-food):null,total:claim+allow}}
+function home(){cur=null;$('#app').innerHTML=`<h1>Site visits</h1><button class=p onclick=nt()>New visit</button><p></p>`+
+ (D.trips.length?'':'<p class=mu>No visits yet. Add one before you leave for the site.</p>')+
+ D.trips.slice().reverse().map(t=>{const c=calc(t);return`<div class=cd onclick="op(${t.id})"><div class=t><b>${esc(t.customer||'Untitled')}</b><span class=am>${inr(c.total)}</span></div><div class=mu>${esc(t.dest)} · ${t.start||''} · ${t.type=='out'?'Outstation':'In-city'} · saved ${inr(c.sav)}</div></div>`}).join('')+
+ `<p class=mu><a class=b onclick=bk()>Back up data</a> &nbsp; <a class=b onclick="$('#f').click()">Restore backup</a><input id=f type=file hidden onchange=rs(event)></p>`}
+function nt(){const t={id:Date.now(),customer:'',ips:'',dest:'',purpose:'',teNo:'',type:'in',start:today(),end:today(),days:null,lines:[]};D.trips.push(t);save();op(t.id)}
+function op(id){cur=D.trips.find(t=>t.id==id);eid=null;const t=cur,I=(k,l,ty='text',x='')=>`<div><label>${l}</label><input ${x} type=${ty} value="${esc(t[k])}" oninput="S('${k}',this.value)"></div>`;
+ $('#app').innerHTML=`<a class=b onclick=home()>‹ All visits</a><h1>${esc(t.customer||'New visit')}</h1><div class=cd>
+ <div class=r>${I('customer','Customer','text','list=cl')}${I('ips','IPS number')}</div><datalist id=cl>${Object.keys(D.cust).map(c=>`<option>${esc(c)}`).join('')}</datalist>
+ <div class=r>${I('dest','Destination')}${I('purpose','Purpose')}</div>
+ <div class=r><div><label>Type</label><select onchange="S('type',this.value)"><option value=in ${t.type=='in'?'selected':''}>In-city (under 150 km)<option value=out ${t.type=='out'?'selected':''}>Outstation</select></div>${I('teNo','TE number (from portal)')}</div>
+ <div class=r>${I('start','Start','date')}${I('end','End','date')}<div><label>Days</label><input type=number id=dy placeholder="${Math.max(1,diff(t))}" value="${t.days??''}" oninput="S('days',this.value===''?null:+this.value)"></div></div></div>
+ <div id=sum></div>
+ <div class=cd><div class=r><select id=cat onchange=tg()>${[...TRV,...FOOD].map(c=>`<option>${c}`).join('')}</select><input id=dt type=date value="${last.date||t.start}"></div>
+ <div class=r id=tr><input id=fr placeholder="From"><input id=to placeholder="To"></div><input id=det placeholder="Details (optional)" hidden>
+ <div class=r><input id=amt type=number inputmode=decimal placeholder="Bill ₹"><input id=sv type=number inputmode=decimal placeholder="Saved ₹"></div>
+ <div class=r><select id=pay>${Object.entries(PAY).map(([k,v])=>`<option value=${k} ${k==last.pay?'selected':''}>${v}`).join('')}</select><label style="display:flex;align-items:center;gap:8px;margin:0 0 8px"><input type=checkbox id=bl style="width:auto;margin:0"> Bill attached</label></div>
+ <button class=p id=ab onclick=al()>Add expense</button></div><div id=ls></div>
+ <button class=p onclick=xl()>Download TE Excel</button><p><a class=b onclick=dt()>Delete this visit</a></p>`;rf()}
+function S(k,v){cur[k]=v;if(k=='customer'&&D.cust[v]){cur.ips=D.cust[v];op(cur.id);return}
+ if(k=='ips'&&cur.customer)D.cust[cur.customer]=v;save();if(['type','start','end','days'].includes(k)){if(k=='type')rf();else{$('#dy').placeholder=Math.max(1,diff(cur));rf()}}else rf()}
+function tg(){const f=FOOD.includes($('#cat').value);$('#tr').hidden=f;$('#det').hidden=!f}
+function rf(){const t=cur,c=calc(t),m={};c.rows.forEach(r=>m[r.l.id]=r);
+ $('#sum').innerHTML=`<div class="cd tk"><div class=t><span>Excel claim</span><b>${inr(c.claim)}</b></div>${t.type=='out'?`<div class=t><span>Portal food allowance <span class=mu>(${days(t)} × ₹550)</span></span><b>${inr(c.allow)}</b></div>`:''}<hr>
+ <div class=t><span>You receive</span><span class=big>${inr(c.total)}</span></div><div class=t><span>Your savings</span><b class=am>${inr(c.sav)}</b></div>
+ ${c.fr!==null?`<div class=t><span class=mu>Food vs allowance</span><b style="color:var(--${c.fr<0?'bad':'ok'})">${c.fr>0?'+':''}${inr(c.fr)}</b></div>`:''}</div>`;
+ $('#ls').innerHTML=[...t.lines].sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id).map(l=>{const r=m[l.id]||{};return`<div class=cd onclick="ed(${l.id})"><div class=t><span>${esc(desc(l))}</span><b>${inr(l.amt)}</b></div><div class=mu>${l.date} · ${PAY[l.pay]}${r.bill?` · bill ${r.bill}`:''}${l.saved?` · saved ${inr(l.saved)}`:''}</div>${r.why?`<div class=w>${r.why}</div>`:r.tr?`<div class=w>Trimmed to ${inr(r.c)} for the ₹300 daily cap</div>`:''}</div>`}).join('')}
+function al(){const amt=+$('#amt').value;if(!(amt>0))return $('#amt').focus();
+ const l={id:eid||Date.now(),date:$('#dt').value,cat:$('#cat').value,from:$('#fr').value.trim(),to:$('#to').value.trim(),det:$('#det').value.trim(),amt,saved:+$('#sv').value||0,pay:$('#pay').value,bill:$('#bl').checked};
+ const i=cur.lines.findIndex(x=>x.id==l.id);i<0?cur.lines.push(l):cur.lines[i]=l;last={pay:l.pay,date:l.date};save();
+ const to=l.to;eid=null;$('#ab').textContent='Add expense';['amt','sv','det','to'].forEach(k=>$('#'+k).value='');$('#fr').value=to;$('#bl').checked=false;rf()}
+function ed(id){const l=cur.lines.find(x=>x.id==id);eid=id;const s=(k,v)=>$('#'+k).value=v;s('cat',l.cat);tg();s('dt',l.date);s('fr',l.from);s('to',l.to);s('det',l.det);s('amt',l.amt);s('sv',l.saved||'');s('pay',l.pay);$('#bl').checked=l.bill;
+ $('#ab').textContent='Update expense';scrollTo(0,0);if(confirm('Delete this expense instead?\nOK = delete, Cancel = edit it'))dl(id)}
+function dl(id){cur.lines=cur.lines.filter(x=>x.id!=id);eid=null;$('#ab').textContent='Add expense';save();rf()}
+function dt(){if(confirm('Delete this whole visit?')){D.trips=D.trips.filter(x=>x!=cur);save();home()}}
+function bk(){dw(new Blob([JSON.stringify(D)]),`te-backup-${today()}.json`)}
+function rs(e){const f=e.target.files[0];if(!f)return;f.text().then(x=>{try{const d=JSON.parse(x);if(!d.trips)throw 0;D=d;save();home()}catch{alert('That file is not a TE backup.')}})}
+function dw(b,n){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click()}
+async function xl(){const t=cur,c=calc(t),U=s=>s?new Date(Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))):null,F='d-mmm-yy';
+ try{const wb=new ExcelJS.Workbook();await wb.xlsx.load(await(await fetch('TE_format.xlsx')).arrayBuffer());const ws=wb.worksheets[0];
+ const rows=c.rows.filter(r=>!r.skip),x=Math.max(0,rows.length-20),a=31+x;
+ if(x){['C31:D31','C32:D32','C33:D33','E32:F32','E33:F33'].forEach(m=>ws.unMergeCells(m));ws.spliceRows(31,0,...Array(x).fill([]));
+  for(let i=0;i<x;i++)for(let k=1;k<=6;k++)ws.getRow(31+i).getCell(k).style={...ws.getRow(30).getCell(k).style};
+  [`C${a}:D${a}`,`C${a+1}:D${a+1}`,`C${a+2}:D${a+2}`,`E${a+1}:F${a+1}`,`E${a+2}:F${a+2}`].forEach(m=>ws.mergeCells(m))}
+ ws.getCell('C2').value=t.dest;ws.getCell('F2').value=t.purpose;ws.getCell('C3').value=t.customer;ws.getCell('C4').value=t.ips;ws.getCell('F4').value=days(t);
+ ws.getCell('C5').value=U(t.start);ws.getCell('C5').numFmt=F;ws.getCell('F5').value=U(t.end);ws.getCell('F5').numFmt=F;ws.getCell('C6').value=t.teNo.trim();
+ rows.forEach((r,i)=>{const R=ws.getRow(11+i);[1,2].forEach(k=>{R.getCell(k).value=U(r.l.date);R.getCell(k).numFmt=F});R.getCell(3).value=desc(r.l);R.getCell(4).value=r.bill||null;R.getCell(6).value=r.c});
+ ws.getCell(`E${a}`).value={formula:`SUM(E11:E${a-1})`,result:0};ws.getCell(`F${a}`).value={formula:`SUM(F11:F${a-1})`,result:c.claim};
+ ws.getCell(`E${a+1}`).value={formula:`E${a}+F${a}`,result:c.claim};ws.getCell(`E${a+2}`).value={formula:`F${a}-C7`,result:c.claim};
+ wb.calcProperties.fullCalcOnLoad=true;dw(new Blob([await wb.xlsx.writeBuffer()]),`TE_${(t.customer||'trip').replace(/\W+/g,'_')}_${t.start}.xlsx`)}
+ catch(e){alert('Export failed: '+e.message+'\nOpen the app once with network so the Excel library and TE_format.xlsx get cached.')}}
+home();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+</script></body></html>
