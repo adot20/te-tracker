@@ -10,7 +10,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.45 -apple-syst
 main{max-width:600px;margin:auto;padding:16px 14px 48px}
 h1{font-size:15px;letter-spacing:.09em;text-transform:uppercase;color:var(--mu);font-weight:700;margin:4px 0 14px}
 h2{font-size:23px;margin:2px 0 14px;font-weight:800;letter-spacing:-.01em}
-.cd{background:var(--cd);border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 12px;animation:rise .3s ease both}
+.cd{background:var(--cd);border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 12px;animation:rise .3s ease both;position:relative}
 @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.cd{animation:none}}
 input,select,button{font:inherit;color:inherit;width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:var(--cd);margin:0 0 9px;-webkit-appearance:none}
@@ -25,43 +25,56 @@ a.b{color:var(--rail);cursor:pointer;font-weight:600;text-decoration:none}
 .back{display:inline-block;margin-bottom:10px;font-size:14px}
 input:focus,select:focus,button:focus-visible{outline:2px solid var(--am);outline-offset:1px}
 
-/* home: boarding-pass trip stub */
 .stub{display:flex;position:relative;cursor:pointer;padding:0;overflow:hidden}
 .stub .main{flex:1;padding:14px;min-width:0}
-.stub .tail{width:104px;flex-shrink:0;background:var(--rail);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;
- padding:8px;position:relative;text-align:center}
-.stub .tail::before{content:"";position:absolute;left:-7px;top:0;bottom:0;width:14px;
+.stub .tail{width:104px;flex-shrink:0;background:var(--rail);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;position:relative;text-align:center}
+.tail::before,.tbox::before{content:"";position:absolute;left:-7px;top:0;bottom:0;width:14px;
  background-image:radial-gradient(circle,var(--bg) 4.5px,transparent 4.6px);background-size:14px 15px;background-repeat:repeat-y}
 .stub .amt{font-size:19px;font-weight:800}
 .stub .amtlbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;opacity:.85;margin-top:2px}
 .stub .dest{font-weight:700;font-size:16.5px;margin:0 0 3px}
-.stub .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-top:6px}
+.tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-top:6px}
 .tag.out{background:color-mix(in srgb,var(--am) 18%,transparent);color:var(--am)}
 .tag.in{background:color-mix(in srgb,var(--rail) 14%,transparent);color:var(--rail)}
 
-/* ledger card */
-.ledger .row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0}
-.ledger .row+.row{border-top:1px dashed var(--line)}
-.ledger .net{font-size:24px;font-weight:800}
+.twocol{display:flex;padding:0;overflow:hidden}
+.twocol .main{flex:1;padding:14px;min-width:0}
+.tbox{width:108px;flex-shrink:0;background:var(--rail);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;text-align:center;position:relative}
+.tbox .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;opacity:.85;margin-bottom:5px}
+.tbox .amt{font-size:19px;font-weight:800;color:#fff}
+.tbox .amt.neg{color:#ffc2bb}
+.tbox .sub{font-size:10.5px;opacity:.9;margin-top:4px}
+
+.row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0}
+.row+.row{border-top:1px dashed var(--line)}
 .pos{color:var(--good)}.neg{color:var(--bad)}
 .headline{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
 .headline .v{font-size:26px;font-weight:800}
 
-/* expense receipt list */
-.rc{position:relative;padding:11px 34px 11px 14px;border-radius:10px;background:var(--cd);border:1px solid var(--line);margin:0 0 8px;cursor:pointer}
+.rc{position:relative;padding:11px 38px 11px 14px;border-radius:10px;background:var(--cd);border:1px solid var(--line);margin:0 0 8px;cursor:pointer}
 .rc .top{display:flex;align-items:baseline;gap:6px}
 .rc .desc{font-weight:600}
 .rc .dots{flex:1;border-bottom:1px dotted var(--line);margin-bottom:4px;min-width:12px}
 .rc .amt{font-weight:700;white-space:nowrap}
 .rc .meta{color:var(--mu);font-size:12.5px;margin-top:2px}
 .rc .warn{color:var(--am);font-size:12.5px;margin-top:2px;font-weight:600}
-.rc .del{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:7px;border:1px solid var(--line);background:var(--bg);
- color:var(--mu);padding:0;margin:0;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center}
-.rc:hover .del{color:var(--bad)}
 .editing{outline:2px solid var(--am)}
+.kebab{position:absolute;top:4px;right:4px;width:30px;height:30px;border:none;background:transparent;color:var(--mu);font-size:18px;padding:0;margin:0;display:flex;align-items:center;justify-content:center;border-radius:8px}
+.kebab:hover,.kebab:focus-visible{background:var(--bg);color:var(--ink)}
+.menu{position:absolute;top:32px;right:4px;background:var(--cd);border:1px solid var(--line);border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.18);overflow:hidden;z-index:5;min-width:132px}
+.menu button{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;border:none;border-radius:0;background:var(--cd);margin:0;font-size:13.5px;font-weight:600;text-align:left;color:var(--ink)}
+.menu button+button{border-top:1px solid var(--line)}
+.menu button.danger{color:var(--bad)}
+.menu button:hover{background:var(--bg)}
 
-.chk{display:flex;align-items:center;gap:9px;padding:11px 12px;border:1px solid var(--line);border-radius:9px;margin:0 0 9px;background:var(--cd)}
-.chk input{width:auto;margin:0}
+label.chk{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:9px;margin:0 0 9px;background:var(--cd);cursor:pointer;user-select:none;transition:border-color .15s,background .15s}
+label.chk input{position:absolute;opacity:0;width:0;height:0}
+label.chk .box{width:21px;height:21px;border:2px solid var(--line);border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;color:#fff;font-size:13px;font-weight:800}
+label.chk input:checked~.box{background:var(--rail);border-color:var(--rail)}
+label.chk input:checked~.box::after{content:"✓"}
+label.chk:has(input:checked){border-color:var(--rail);background:color-mix(in srgb,var(--rail) 8%,var(--cd))}
+
+.svhint{font-size:12px;margin:-5px 0 9px;min-height:15px}
 .notice{background:color-mix(in srgb,var(--am) 12%,var(--cd));border:1px solid color-mix(in srgb,var(--am) 40%,var(--line));border-radius:9px;padding:10px 12px;font-size:13px;margin:0 0 12px;color:var(--ink)}
 .empty{text-align:center;padding:36px 12px;color:var(--mu)}
 .formhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
@@ -71,23 +84,26 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--am);outlin
 const $=s=>document.querySelector(s),K='te_data_v2',
 TRV=['Metro','Namo Bharat Metro','Auto','Rapido','Uber','Train','Bus','Other'],
 FOOD=['Breakfast','Lunch','Dinner','Snacks','Food'],
-PERSONAL=['Personal'],DESC=[...FOOD,...PERSONAL],
+PERS=[['Personal','Personal'],['Grocery','Grocery'],['Pother','Other']],
+PV=PERS.map(p=>p[0]),DESC=[...FOOD,...PV],
 PAY={upi:'UPI',cc:'Credit card',cash:'Cash',metro:'Metro card'};
 let D=JSON.parse(localStorage.getItem(K)||migrate()||'{"trips":[],"cust":{}}'),cur=null,eid=null,last={pay:'upi',date:''};
-function migrate(){const o=localStorage.getItem('te_data');return o||null}
+function migrate(){return localStorage.getItem('te_data')}
 const save=()=>localStorage.setItem(K,JSON.stringify(D)),
 esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),
 inr=n=>'₹'+(Math.round(n*100)/100).toLocaleString('en-IN'),today=()=>new Date().toLocaleDateString('en-CA'),
 diff=t=>t.start&&t.end?Math.round((new Date(t.end)-new Date(t.start))/864e5):0,
 days=t=>t.days??Math.max(1,diff(t)),
-desc=l=>DESC.includes(l.cat)?l.cat+(l.det?` — ${l.det}`:''):(l.from||l.to?`${l.cat}: ${l.from||'?'} → ${l.to||'?'}`:l.cat);
+catLbl=c=>(PERS.find(p=>p[0]==c)||[0,c])[1],
+desc=l=>DESC.includes(l.cat)?catLbl(l.cat)+(l.det?` — ${l.det}`:''):(l.from||l.to?`${l.cat}: ${l.from||'?'} → ${l.to||'?'}`:l.cat),
+lineSaved=l=>Math.round(((l.eff!=null?l.amt-l.eff:(l.saved||0)))*100)/100;
 
 function calc(t){
  const out=t.type=='out',rows=[],foodByDay={};
  let savings=0,personal=0;
  [...t.lines].sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id).forEach(l=>{
-  savings+=l.saved||0;
-  const isFood=FOOD.includes(l.cat),isPers=PERSONAL.includes(l.cat);
+  savings+=lineSaved(l);
+  const isFood=FOOD.includes(l.cat),isPers=PV.includes(l.cat);
   const excel=!(isPers||(out&&isFood));
   if(!excel)personal+=l.amt;
   if(!out&&isFood)foodByDay[l.date]=(foodByDay[l.date]||0)+l.amt;
@@ -129,14 +145,15 @@ function op(id){cur=D.trips.find(t=>t.id==id);eid=null;const t=cur,
   <select id=cat onchange=tg()>
    <optgroup label="Travel">${TRV.map(c=>`<option>${c}`).join('')}</optgroup>
    <optgroup label="Food">${FOOD.map(c=>`<option>${c}`).join('')}</optgroup>
-   <optgroup label="Personal">${PERSONAL.map(c=>`<option>${c}`).join('')}</optgroup>
+   <optgroup label="Personal">${PERS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</optgroup>
   </select>
   <input id=dt type=date value="${last.date||t.start}">
   <div class=r id=tr><input id=fr placeholder="From"><input id=to placeholder="To"></div>
   <input id=det placeholder="Details (optional)" hidden>
-  <div class=r><input id=amt type=number min=0 inputmode=decimal placeholder="Bill amount ₹"><input id=sv type=number min=0 inputmode=decimal placeholder="Cashback/saved ₹"></div>
+  <div class=r><input id=amt type=number min=0 inputmode=decimal placeholder="Bill amount ₹" oninput=svhint()><input id=eff type=number min=0 inputmode=decimal placeholder="Effective cost ₹ (optional)" oninput=svhint()></div>
+  <div id=svh class=svhint></div>
   <select id=pay>${Object.entries(PAY).map(([k,v])=>`<option value=${k} ${k==last.pay?'selected':''}>${v}`).join('')}</select>
-  <div class=chk><input type=checkbox id=bl> <span>Bill attached</span></div>
+  <label class=chk><input type=checkbox id=bl><span class=box></span><span>Bill attached</span></label>
   <button class=p id=ab onclick=al()>${eid?'Save changes':'Add expense'}</button>
  </div>
  <div id=ls></div>
@@ -150,44 +167,62 @@ function S(k,v){cur[k]=v;if(k=='customer'&&D.cust[v]){cur.ips=D.cust[v];op(cur.i
  rf()}
 function tg(){const d=DESC.includes($('#cat').value);$('#tr').hidden=d;$('#det').hidden=!d}
 function cc(){eid=null;op(cur.id)}
+function svhint(){const a=+$('#amt').value||0,ev=$('#eff').value,e=ev===''?null:+ev,h=$('#svh');
+ if(e==null||!a){h.textContent='';h.className='svhint mu';return}
+ const d=Math.round((a-e)*100)/100;
+ if(d>0){h.textContent=`Saved ₹${d} → goes to your personal ledger`;h.className='svhint pos'}
+ else if(d<0){h.textContent=`Costs ₹${-d} more than the bill`;h.className='svhint neg'}
+ else{h.textContent='No difference';h.className='svhint mu'}}
 
 function rf(){const t=cur,c=calc(t);
  $('#sum').innerHTML=`
- <div class=cd><div class=headline><span class=mu>You'll receive</span><span class=v>${inr(c.total)}</span></div>
-  <div class=ledger>
+ <div class="cd twocol">
+  <div class=main><div class=headline><span class=mu>You'll receive</span><span class=v>${inr(c.total)}</span></div>
    <div class=row><span class=mu>Excel claim</span><b>${inr(c.claim)}</b></div>
    ${t.type=='out'?`<div class=row><span class=mu>Outstation allowance (${days(t)} × ₹550)</span><b>${inr(c.allow)}</b></div>`:''}
-  </div></div>
- <div class="cd ledger"><div class=headline><span class=mu>Personal ledger</span><span class="net ${c.net<0?'neg':'pos'}">${c.net<0?'−':''}${inr(Math.abs(c.net))}</span></div>
-  <div class=row><span class=mu>Cashback &amp; discounts</span><b class=pos>+${inr(c.savings)}</b></div>
+  </div>
+  <div class=tbox><div class=lbl>Personal<br>Ledger</div><div class="amt ${c.net<0?'neg':''}">${c.net<0?'−':'+'}${inr(Math.abs(c.net))}</div><div class=sub>${c.net<0?'costs you':'you gain'}</div></div>
+ </div>
+ <div class=cd>
+  <div class=row><span class=mu>Cashback &amp; Returns</span><b class=pos>+${inr(c.savings)}</b></div>
   ${t.type=='out'?`<div class=row><span class=mu>Outstation allowance</span><b class=pos>+${inr(c.allow)}</b></div>`:''}
   ${c.personal?`<div class=row><span class=mu>Personal spend (not in Excel)</span><b class=neg>−${inr(c.personal)}</b></div>`:''}
  </div>
  ${c.overDays.length?`<div class=notice>⚠ Food went over the ₹300 daily cap on ${c.overDays.map(([d,v])=>`${d} (${inr(v)})`).join(', ')}. It still exports at the full amount — just flagging it.</div>`:''}`;
- $('#ls').innerHTML=c.rows.length?c.rows.map(r=>{const l=r.l;
+ $('#ls').innerHTML=c.rows.length?c.rows.map(r=>{const l=r.l,sv=lineSaved(l);
   return`<div class="rc${eid==l.id?' editing':''}" onclick="ed(${l.id})">
-   <button class=del onclick="event.stopPropagation();dl(${l.id})" aria-label=Delete>×</button>
+   <button class=kebab onclick="event.stopPropagation();toggleMenu(${l.id})" aria-label=Options>⋮</button>
+   <div class=menu id="menu-${l.id}" hidden onclick="event.stopPropagation()">
+    <button onclick="ed(${l.id});closeMenus()">✎ Edit</button>
+    <button class=danger onclick="dl(${l.id});closeMenus()">🗑 Delete</button>
+    <button onclick="closeMenus()">✕ Cancel</button>
+   </div>
    <div class=top><span class=desc>${esc(desc(l))}</span><span class=dots></span><span class=amt>${inr(l.amt)}</span></div>
-   <div class=meta>${l.date} · ${PAY[l.pay]}${r.bill?` · bill ${r.bill}`:''}${l.saved?` · saved ${inr(l.saved)}`:''}</div>
-   ${!r.excel?`<div class=warn>${PERSONAL.includes(l.cat)?'Personal spend — in your ledger, not the Excel':'Outstation food — in your ledger, not the Excel'}</div>`:''}
+   <div class=meta>${l.date} · ${PAY[l.pay]}${r.bill?` · bill ${r.bill}`:''}${sv?` · saved ${inr(sv)}`:''}</div>
+   ${!r.excel?`<div class=warn>${PV.includes(l.cat)?'Personal spend — in your ledger, not the Excel':'Outstation food — in your ledger, not the Excel'}</div>`:''}
   </div>`}).join(''):'<div class="cd empty">No expenses logged yet.</div>'}
 
+function toggleMenu(id){const willOpen=$('#menu-'+id).hidden;closeMenus();if(willOpen)$('#menu-'+id).hidden=false}
+function closeMenus(){document.querySelectorAll('.menu').forEach(m=>m.hidden=true)}
+document.addEventListener('click',closeMenus);
+
 function al(){const amt=+$('#amt').value;if(!(amt>0))return $('#amt').focus();
- const l={id:eid||Date.now(),date:$('#dt').value,cat:$('#cat').value,from:$('#fr').value.trim(),to:$('#to').value.trim(),det:$('#det').value.trim(),amt,saved:+$('#sv').value||0,pay:$('#pay').value,bill:$('#bl').checked};
+ const ev=$('#eff').value,eff=ev===''?null:+ev;
+ const l={id:eid||Date.now(),date:$('#dt').value,cat:$('#cat').value,from:$('#fr').value.trim(),to:$('#to').value.trim(),det:$('#det').value.trim(),amt,eff,pay:$('#pay').value,bill:$('#bl').checked};
  const i=cur.lines.findIndex(x=>x.id==l.id);i<0?cur.lines.push(l):cur.lines[i]=l;
  last={pay:l.pay,date:l.date};save();
  const wasEdit=!!eid,to=l.to;eid=null;
- $('#ab').textContent='Add expense';$('.formhead label').textContent='Add expense';
+ $('#ab').textContent='Add expense';document.querySelector('.formhead label').textContent='Add expense';
  const cf=document.querySelector('.formhead .cancel');if(cf)cf.remove();
- ['amt','sv','det','to'].forEach(k=>$('#'+k).value='');$('#fr').value=wasEdit?'':to;$('#bl').checked=false;
+ ['amt','eff','det','to'].forEach(k=>$('#'+k).value='');$('#fr').value=wasEdit?'':to;$('#bl').checked=false;svhint();
  rf()}
-function ed(id){const l=cur.lines.find(x=>x.id==id);eid=id;
+function ed(id){closeMenus();const l=cur.lines.find(x=>x.id==id);eid=id;
  $('#cat').value=l.cat;tg();$('#dt').value=l.date;$('#fr').value=l.from;$('#to').value=l.to;$('#det').value=l.det;
- $('#amt').value=l.amt;$('#sv').value=l.saved||'';$('#pay').value=l.pay;$('#bl').checked=l.bill;
+ $('#amt').value=l.amt;$('#eff').value=l.eff!=null?l.eff:'';$('#pay').value=l.pay;$('#bl').checked=l.bill;svhint();
  $('#ab').textContent='Save changes';const fh=document.querySelector('.formhead');fh.querySelector('label').textContent='Edit expense';
  if(!fh.querySelector('.cancel'))fh.insertAdjacentHTML('beforeend','<span class=cancel onclick=cc()>Cancel</span>');
- rf();document.querySelector('.rc.editing')?.scrollIntoView({block:'center',behavior:'smooth'});window.scrollTo({top:document.querySelector('.cd:nth-of-type(2)')?.offsetTop-8||0,behavior:'smooth'})}
-function dl(id){if(eid==id){eid=null}cur.lines=cur.lines.filter(x=>x.id!=id);save();
+ rf();window.scrollTo({top:document.querySelectorAll('.cd')[1]?.offsetTop-8||0,behavior:'smooth'})}
+function dl(id){closeMenus();if(eid==id)eid=null;cur.lines=cur.lines.filter(x=>x.id!=id);save();
  $('#ab').textContent='Add expense';const cf=document.querySelector('.formhead .cancel');if(cf)cf.remove();document.querySelector('.formhead label').textContent='Add expense';
  rf()}
 function dt(){if(confirm('Delete this whole visit? This cannot be undone.')){D.trips=D.trips.filter(x=>x!=cur);save();home()}}
