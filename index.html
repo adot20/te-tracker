@@ -2,7 +2,7 @@
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><meta name="theme-color" content="#1d3a5f">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
-:root{--bg:#f5f1e7;--cd:#fffdf8;--ink:#1f232b;--mu:#767b87;--rail:#1d3a5f;--am:#b8740a;--line:#d8d0bc;--good:#1f7a4d;--bad:#b3261e}
+:root{--bg:#f5f1e7;--cd:#fffdf8;--ink:#1f232b;--mu:#767b87;--rail:#1d3a5f;--fill:#1d3a5f;--am:#b8740a;--line:#d8d0bc;--good:#1f7a4d;--bad:#b3261e}
 @media(prefers-color-scheme:dark){:root{--bg:#10141b;--cd:#1a2029;--ink:#eef1f7;--mu:#93a0c0;--rail:#8fb2e0;--am:#f0b348;--line:#333c4d;--good:#57e0a0;--bad:#ff8f86}}
 *{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0)}
 body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.45 -apple-system,system-ui,Roboto,sans-serif;font-variant-numeric:tabular-nums;
@@ -14,9 +14,11 @@ h2{font-size:23px;margin:2px 0 14px;font-weight:800;letter-spacing:-.01em}
 @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.cd{animation:none}}
 input,select,button{font:inherit;color:inherit;width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:var(--cd);margin:0 0 9px;-webkit-appearance:none}
+input[type=date]{font-size:14px}
+input::placeholder{font-size:14px}
 select{background-image:linear-gradient(45deg,transparent 50%,var(--mu) 50%),linear-gradient(135deg,var(--mu) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat}
 button{cursor:pointer;width:auto;font-weight:700}
-button.p{background:var(--rail);color:#fff;border-color:var(--rail);width:100%;padding:13px;border-radius:10px;letter-spacing:.02em}
+button.p{background:var(--fill);color:#fff;border-color:var(--fill);width:100%;padding:13px;border-radius:10px;letter-spacing:.02em}
 button.p:active{transform:scale(.99)}
 .r{display:flex;gap:8px}.r>*{flex:1;min-width:0}
 label{display:block;font-size:12px;color:var(--mu);margin:0 0 3px;letter-spacing:.02em}
@@ -27,7 +29,7 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--am);outlin
 
 .stub{display:flex;position:relative;cursor:pointer;padding:0;overflow:hidden}
 .stub .main{flex:1;padding:14px;min-width:0}
-.stub .tail{width:104px;flex-shrink:0;background:var(--rail);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;position:relative;text-align:center}
+.stub .tail{width:104px;flex-shrink:0;background:var(--fill);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;position:relative;text-align:center}
 .tail::before,.tbox::before{content:"";position:absolute;left:-7px;top:0;bottom:0;width:14px;
  background-image:radial-gradient(circle,var(--bg) 4.5px,transparent 4.6px);background-size:14px 15px;background-repeat:repeat-y}
 .stub .amt{font-size:19px;font-weight:800}
@@ -37,15 +39,19 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--am);outlin
 .tag.out{background:color-mix(in srgb,var(--am) 18%,transparent);color:var(--am)}
 .tag.in{background:color-mix(in srgb,var(--rail) 14%,transparent);color:var(--rail)}
 
+.draftcard{border-style:dashed;border-color:var(--am);background:color-mix(in srgb,var(--am) 7%,var(--cd));cursor:pointer}
+.draftrow{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.savebar{border-color:var(--am);background:color-mix(in srgb,var(--am) 9%,var(--cd))}
+.savebar button.p{background:var(--am);border-color:var(--am)}
+
 .twocol{display:flex;padding:0;overflow:hidden}
 .twocol .main{flex:1;padding:14px;min-width:0}
-.tbox{width:108px;flex-shrink:0;background:var(--rail);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;text-align:center;position:relative}
+.tbox{width:108px;flex-shrink:0;background:var(--fill);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;text-align:center;position:relative}
 .tbox .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;opacity:.85;margin-bottom:5px}
 .tbox .amt{font-size:19px;font-weight:800;color:#fff}
-.tbox .amt.neg{color:#ffc2bb}
 .tbox .sub{font-size:10.5px;opacity:.9;margin-top:4px}
 
-.row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0}
+.row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;gap:10px}
 .row+.row{border-top:1px dashed var(--line)}
 .pos{color:var(--good)}.neg{color:var(--bad)}
 .headline{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
@@ -61,7 +67,7 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--am);outlin
 .editing{outline:2px solid var(--am)}
 .kebab{position:absolute;top:4px;right:4px;width:30px;height:30px;border:none;background:transparent;color:var(--mu);font-size:18px;padding:0;margin:0;display:flex;align-items:center;justify-content:center;border-radius:8px}
 .kebab:hover,.kebab:focus-visible{background:var(--bg);color:var(--ink)}
-.menu{position:absolute;top:32px;right:4px;background:var(--cd);border:1px solid var(--line);border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.18);overflow:hidden;z-index:5;min-width:132px}
+.menu{background:var(--cd);border:1px solid var(--line);border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.2);overflow:hidden;z-index:50;min-width:134px}
 .menu button{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;border:none;border-radius:0;background:var(--cd);margin:0;font-size:13.5px;font-weight:600;text-align:left;color:var(--ink)}
 .menu button+button{border-top:1px solid var(--line)}
 .menu button.danger{color:var(--bad)}
@@ -70,9 +76,9 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--am);outlin
 label.chk{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:9px;margin:0 0 9px;background:var(--cd);cursor:pointer;user-select:none;transition:border-color .15s,background .15s}
 label.chk input{position:absolute;opacity:0;width:0;height:0}
 label.chk .box{width:21px;height:21px;border:2px solid var(--line);border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;color:#fff;font-size:13px;font-weight:800}
-label.chk input:checked~.box{background:var(--rail);border-color:var(--rail)}
+label.chk input:checked~.box{background:var(--fill);border-color:var(--fill)}
 label.chk input:checked~.box::after{content:"✓"}
-label.chk:has(input:checked){border-color:var(--rail);background:color-mix(in srgb,var(--rail) 8%,var(--cd))}
+label.chk:has(input:checked){border-color:var(--fill);background:color-mix(in srgb,var(--fill) 8%,var(--cd))}
 
 .svhint{font-size:12px;margin:-5px 0 9px;min-height:15px}
 .notice{background:color-mix(in srgb,var(--am) 12%,var(--cd));border:1px solid color-mix(in srgb,var(--am) 40%,var(--line));border-radius:9px;padding:10px 12px;font-size:13px;margin:0 0 12px;color:var(--ink)}
@@ -81,15 +87,19 @@ label.chk:has(input:checked){border-color:var(--rail);background:color-mix(in sr
 .formhead .cancel{font-size:13px;color:var(--mu);cursor:pointer}
 </style></head><body><main id="app"></main>
 <script>
-const $=s=>document.querySelector(s),K='te_data_v2',
+const $=s=>document.querySelector(s),K='te_data_v2',DK='te_draft_v1',
 TRV=['Metro','Namo Bharat Metro','Auto','Rapido','Uber','Train','Bus','Other'],
 FOOD=['Breakfast','Lunch','Dinner','Snacks','Food'],
 PERS=[['Personal','Personal'],['Grocery','Grocery'],['Pother','Other']],
 PV=PERS.map(p=>p[0]),DESC=[...FOOD,...PV],
 PAY={upi:'UPI',cc:'Credit card',cash:'Cash',metro:'Metro card'};
-let D=JSON.parse(localStorage.getItem(K)||migrate()||'{"trips":[],"cust":{}}'),cur=null,eid=null,last={pay:'upi',date:''};
+let D=JSON.parse(localStorage.getItem(K)||migrate()||'{"trips":[],"cust":{}}'),
+ draft=JSON.parse(localStorage.getItem(DK)||'null'),cur=null,eid=null,last={pay:'upi',date:''};
 function migrate(){return localStorage.getItem('te_data')}
 const save=()=>localStorage.setItem(K,JSON.stringify(D)),
+saveDraft=()=>{if(draft)localStorage.setItem(DK,JSON.stringify(draft))},
+persist=()=>cur.saved===false?saveDraft():save(),
+isEmptyDraft=t=>!t.customer&&!t.dest&&!t.purpose&&!t.teNo&&(!t.lines||!t.lines.length),
 esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),
 inr=n=>'₹'+(Math.round(n*100)/100).toLocaleString('en-IN'),today=()=>new Date().toLocaleDateString('en-CA'),
 diff=t=>t.start&&t.end?Math.round((new Date(t.end)-new Date(t.start))/864e5):0,
@@ -114,30 +124,45 @@ function calc(t){
  const overDays=Object.entries(foodByDay).filter(([d,v])=>v>300).sort();
  return{rows,claim,allow,savings,personal,net:savings+allow-personal,overDays,total:claim+allow}}
 
-function home(){cur=null;const has=D.trips.length;
+function home(){
+ if(draft&&isEmptyDraft(draft)){draft=null;localStorage.removeItem(DK)}
+ cur=null;const has=D.trips.length;
  $('#app').innerHTML=`<h1>Site Ledger</h1>
  <button class=p onclick=nt()>+ New site visit</button>
+ ${draft?`<div class="cd draftcard" onclick="op(${draft.id})">
+   <div class=draftrow><div><b>${esc(draft.customer||'Unsaved visit')}</b>
+     <div class=mu>${esc(draft.dest||'Draft — tap to continue')}</div></div>
+    <a class=b onclick="event.stopPropagation();discardDraft()">Discard</a></div>
+   <span class=tag style="background:color-mix(in srgb,var(--am) 18%,transparent);color:var(--am)">DRAFT · NOT SAVED</span></div>`:''}
  ${has?D.trips.slice().reverse().map(t=>{const c=calc(t);return`
   <div class="cd stub" onclick="op(${t.id})">
    <div class=main><div class=dest>${esc(t.customer||'Untitled visit')}</div>
     <div class=mu>${esc(t.dest||'No destination yet')}${t.start?' · '+t.start:''}</div>
     <span class="tag ${t.type}">${t.type=='out'?'Outstation':'In-city'}</span></div>
    <div class=tail><div class=amt>${inr(c.total)}</div><div class=amtlbl>Receivable</div></div>
-  </div>`}).join(''):'<div class="cd empty">No site visits yet.<br>Add one before you leave.</div>'}
+  </div>`}).join(''):(draft?'':'<div class="cd empty">No site visits yet.<br>Add one before you leave.</div>')}
  <p class=mu style="text-align:center;margin-top:18px"><a class=b onclick=bk()>Back up data</a> &nbsp;·&nbsp; <a class=b onclick="$('#f').click()">Restore backup</a><input id=f type=file accept=.json hidden onchange=rs(event)></p>`}
 
-function nt(){const t={id:Date.now(),customer:'',ips:'',dest:'',purpose:'',teNo:'',type:'in',start:today(),end:today(),days:null,lines:[]};D.trips.push(t);save();op(t.id)}
+function nt(){
+ if(draft&&!isEmptyDraft(draft)){op(draft.id);return}
+ draft={id:Date.now(),customer:'',ips:'',dest:'',purpose:'',teNo:'',type:'in',start:today(),end:today(),days:null,lines:[],saved:false};
+ saveDraft();op(draft.id)}
 
-function op(id){cur=D.trips.find(t=>t.id==id);eid=null;const t=cur,
+function commitDraft(){if(!draft)return;draft.saved=true;D.trips.push(draft);save();localStorage.removeItem(DK);const id=draft.id;draft=null;op(id)}
+function discardDraft(){draft=null;localStorage.removeItem(DK);if(cur&&cur.saved===false)cur=null;home()}
+
+function op(id){cur=(draft&&draft.id==id)?draft:D.trips.find(t=>t.id==id);eid=null;const t=cur,isDraft=t.saved===false,
  I=(k,l,ty='text',x='')=>`<div><label>${l}</label><input ${x} type=${ty} value="${esc(t[k])}" oninput="S('${k}',this.value)"></div>`;
  $('#app').innerHTML=`<a class="b back" onclick=home()>‹ All visits</a><h2>${esc(t.customer||'New site visit')}</h2>
+ ${isDraft?`<div class="cd savebar"><div class=mu style="margin-bottom:8px">Not saved yet — your entries are kept safely as a draft, but this won't appear in your visit list until you save it.</div><button class=p onclick=commitDraft()>✓ Save visit</button></div>`:''}
  <div class=cd>
   <div class=r>${I('customer','Customer','text','list=cl')}${I('ips','IPS number')}</div><datalist id=cl>${Object.keys(D.cust).map(c=>`<option>${esc(c)}`).join('')}</datalist>
   <div class=r>${I('dest','Destination')}${I('purpose','Purpose')}</div>
   <div class=r><div><label>Trip type</label><select onchange="S('type',this.value)">
    <option value=in ${t.type=='in'?'selected':''}>In-city (under 150 km)<option value=out ${t.type=='out'?'selected':''}>Outstation</select></div>
    ${I('teNo','TE number')}</div>
-  <div class=r>${I('start','Start','date')}${I('end','End','date')}<div><label>Days</label><input type=number min=1 id=dy placeholder="${Math.max(1,diff(t))}" value="${t.days??''}" oninput="S('days',this.value===''?null:+this.value)"></div></div>
+  <div class=r>${I('start','Start','date')}${I('end','End','date')}</div>
+  <div><label>Days</label><input type=number min=1 id=dy placeholder="${Math.max(1,diff(t))}" value="${t.days??''}" oninput="S('days',this.value===''?null:+this.value)"></div>
  </div>
  <div id=sum></div>
  <div class=cd>
@@ -150,7 +175,7 @@ function op(id){cur=D.trips.find(t=>t.id==id);eid=null;const t=cur,
   <input id=dt type=date value="${last.date||t.start}">
   <div class=r id=tr><input id=fr placeholder="From"><input id=to placeholder="To"></div>
   <input id=det placeholder="Details (optional)" hidden>
-  <div class=r><input id=amt type=number min=0 inputmode=decimal placeholder="Bill amount ₹" oninput=svhint()><input id=eff type=number min=0 inputmode=decimal placeholder="Effective cost ₹ (optional)" oninput=svhint()></div>
+  <div class=r><input id=amt type=number min=0 inputmode=decimal placeholder="Bill amount ₹" oninput=svhint()><input id=eff type=number min=0 inputmode=decimal placeholder="Effective cost ₹" oninput=svhint()></div>
   <div id=svh class=svhint></div>
   <select id=pay>${Object.entries(PAY).map(([k,v])=>`<option value=${k} ${k==last.pay?'selected':''}>${v}`).join('')}</select>
   <label class=chk><input type=checkbox id=bl><span class=box></span><span>Bill attached</span></label>
@@ -158,10 +183,10 @@ function op(id){cur=D.trips.find(t=>t.id==id);eid=null;const t=cur,
  </div>
  <div id=ls></div>
  <button class=p onclick=xl()>Download TE Excel</button>
- <p style="text-align:center"><a class=b onclick=dt()>Delete this visit</a></p>`;tg();rf()}
+ <p style="text-align:center"><a class=b onclick=dt()>${isDraft?'Discard draft':'Delete this visit'}</a></p>`;tg();rf()}
 
 function S(k,v){cur[k]=v;if(k=='customer'&&D.cust[v]){cur.ips=D.cust[v];op(cur.id);return}
- if(k=='ips'&&cur.customer)D.cust[cur.customer]=v;save();
+ if(k=='ips'&&cur.customer)D.cust[cur.customer]=v;persist();
  if(k=='type'){op(cur.id);return}
  if(['start','end','days'].includes(k))$('#dy').placeholder=Math.max(1,diff(cur));
  rf()}
@@ -181,7 +206,7 @@ function rf(){const t=cur,c=calc(t);
    <div class=row><span class=mu>Excel claim</span><b>${inr(c.claim)}</b></div>
    ${t.type=='out'?`<div class=row><span class=mu>Outstation allowance (${days(t)} × ₹550)</span><b>${inr(c.allow)}</b></div>`:''}
   </div>
-  <div class=tbox><div class=lbl>Personal<br>Ledger</div><div class="amt ${c.net<0?'neg':''}">${c.net<0?'−':'+'}${inr(Math.abs(c.net))}</div><div class=sub>${c.net<0?'costs you':'you gain'}</div></div>
+  <div class=tbox><div class=lbl>Personal<br>Ledger</div><div class="amt">${c.net<0?'−':'+'}${inr(Math.abs(c.net))}</div><div class=sub>${c.net<0?'costs you':'you gain'}</div></div>
  </div>
  <div class=cd>
   <div class=row><span class=mu>Cashback &amp; Returns</span><b class=pos>+${inr(c.savings)}</b></div>
@@ -191,7 +216,7 @@ function rf(){const t=cur,c=calc(t);
  ${c.overDays.length?`<div class=notice>⚠ Food went over the ₹300 daily cap on ${c.overDays.map(([d,v])=>`${d} (${inr(v)})`).join(', ')}. It still exports at the full amount — just flagging it.</div>`:''}`;
  $('#ls').innerHTML=c.rows.length?c.rows.map(r=>{const l=r.l,sv=lineSaved(l);
   return`<div class="rc${eid==l.id?' editing':''}" onclick="ed(${l.id})">
-   <button class=kebab onclick="event.stopPropagation();toggleMenu(${l.id})" aria-label=Options>⋮</button>
+   <button class=kebab onclick="toggleMenu(event,${l.id})" aria-label=Options>⋮</button>
    <div class=menu id="menu-${l.id}" hidden onclick="event.stopPropagation()">
     <button onclick="ed(${l.id});closeMenus()">✎ Edit</button>
     <button class=danger onclick="dl(${l.id});closeMenus()">🗑 Delete</button>
@@ -202,7 +227,13 @@ function rf(){const t=cur,c=calc(t);
    ${!r.excel?`<div class=warn>${PV.includes(l.cat)?'Personal spend — in your ledger, not the Excel':'Outstation food — in your ledger, not the Excel'}</div>`:''}
   </div>`}).join(''):'<div class="cd empty">No expenses logged yet.</div>'}
 
-function toggleMenu(id){const willOpen=$('#menu-'+id).hidden;closeMenus();if(willOpen)$('#menu-'+id).hidden=false}
+function toggleMenu(e,id){e.stopPropagation();const m=$('#menu-'+id),willOpen=m.hidden;closeMenus();if(!willOpen)return;
+ const r=e.currentTarget.getBoundingClientRect();
+ m.style.position='fixed';m.style.left=Math.max(8,Math.min(r.right-134,window.innerWidth-142))+'px';
+ // Prefer opening upward: the list is always followed by the Download button, so
+ // opening downward would sit on top of it. Only open downward near the very top.
+ if(r.top>170){m.style.bottom=(window.innerHeight-r.top+4)+'px';m.style.top='auto'}else{m.style.top=(r.bottom+4)+'px';m.style.bottom='auto'}
+ m.hidden=false}
 function closeMenus(){document.querySelectorAll('.menu').forEach(m=>m.hidden=true)}
 document.addEventListener('click',closeMenus);
 
@@ -210,7 +241,7 @@ function al(){const amt=+$('#amt').value;if(!(amt>0))return $('#amt').focus();
  const ev=$('#eff').value,eff=ev===''?null:+ev;
  const l={id:eid||Date.now(),date:$('#dt').value,cat:$('#cat').value,from:$('#fr').value.trim(),to:$('#to').value.trim(),det:$('#det').value.trim(),amt,eff,pay:$('#pay').value,bill:$('#bl').checked};
  const i=cur.lines.findIndex(x=>x.id==l.id);i<0?cur.lines.push(l):cur.lines[i]=l;
- last={pay:l.pay,date:l.date};save();
+ last={pay:l.pay,date:l.date};persist();
  const wasEdit=!!eid,to=l.to;eid=null;
  $('#ab').textContent='Add expense';document.querySelector('.formhead label').textContent='Add expense';
  const cf=document.querySelector('.formhead .cancel');if(cf)cf.remove();
@@ -222,10 +253,11 @@ function ed(id){closeMenus();const l=cur.lines.find(x=>x.id==id);eid=id;
  $('#ab').textContent='Save changes';const fh=document.querySelector('.formhead');fh.querySelector('label').textContent='Edit expense';
  if(!fh.querySelector('.cancel'))fh.insertAdjacentHTML('beforeend','<span class=cancel onclick=cc()>Cancel</span>');
  rf();window.scrollTo({top:document.querySelectorAll('.cd')[1]?.offsetTop-8||0,behavior:'smooth'})}
-function dl(id){closeMenus();if(eid==id)eid=null;cur.lines=cur.lines.filter(x=>x.id!=id);save();
+function dl(id){closeMenus();if(eid==id)eid=null;cur.lines=cur.lines.filter(x=>x.id!=id);persist();
  $('#ab').textContent='Add expense';const cf=document.querySelector('.formhead .cancel');if(cf)cf.remove();document.querySelector('.formhead label').textContent='Add expense';
  rf()}
-function dt(){if(confirm('Delete this whole visit? This cannot be undone.')){D.trips=D.trips.filter(x=>x!=cur);save();home()}}
+function dt(){if(cur.saved===false)return discardDraft();
+ if(confirm('Delete this whole visit? This cannot be undone.')){D.trips=D.trips.filter(x=>x!=cur);save();home()}}
 function bk(){dw(new Blob([JSON.stringify(D)]),`te-backup-${today()}.json`)}
 function rs(e){const f=e.target.files[0];if(!f)return;f.text().then(x=>{try{const d=JSON.parse(x);if(!d.trips)throw 0;D=d;save();home()}catch{alert('That file is not a valid backup.')}})}
 function dw(b,n){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click()}
