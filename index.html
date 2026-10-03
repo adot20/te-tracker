@@ -189,6 +189,7 @@ function S(k,v){cur[k]=v;if(k=='customer'&&D.cust[v]){cur.ips=D.cust[v];op(cur.i
  if(k=='ips'&&cur.customer)D.cust[cur.customer]=v;persist();
  if(k=='type'){op(cur.id);return}
  if(['start','end','days'].includes(k))$('#dy').placeholder=Math.max(1,diff(cur));
+ if(k=='start'){last.date=v;const dtEl=$('#dt');if(dtEl)dtEl.value=v}
  rf()}
 function tg(){const d=DESC.includes($('#cat').value);$('#tr').hidden=d;$('#det').hidden=!d}
 function cc(){eid=null;op(cur.id)}
