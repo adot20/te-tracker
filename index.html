@@ -85,14 +85,50 @@ label.chk:has(input:checked){border-color:var(--fill);background:color-mix(in sr
 .empty{text-align:center;padding:36px 12px;color:var(--mu)}
 .formhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
 .formhead .cancel{font-size:13px;color:var(--mu);cursor:pointer}
+
+/* floating action button */
+main{padding-bottom:92px}
+.fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0));width:58px;height:58px;border-radius:50%;
+ background:var(--fill);color:#fff;font-size:28px;line-height:1;display:flex;align-items:center;justify-content:center;
+ box-shadow:0 6px 18px rgba(0,0,0,.3);border:none;cursor:pointer;z-index:30;padding:0;margin:0}
+.fab:active{transform:scale(.94)}
+
+/* bottom sheet */
+.backdrop{position:fixed;inset:0;background:rgba(10,12,18,.45);opacity:0;pointer-events:none;transition:opacity .22s ease;z-index:40}
+.backdrop.show{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--cd);border-radius:18px 18px 0 0;padding:10px 14px calc(16px + env(safe-area-inset-bottom,0));
+ max-height:86vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);z-index:41;box-shadow:0 -10px 30px rgba(0,0,0,.25)}
+.sheet.show{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;background:var(--line);border-radius:3px;margin:2px auto 12px}
+@media(prefers-reduced-motion:reduce){.sheet,.backdrop{transition:none}}
+
+/* pill toggle */
+.pillgroup{display:flex;gap:8px;margin:0 0 4px}
+.pill{flex:1;padding:11px;border-radius:9px;border:1px solid var(--line);background:var(--cd);font-weight:700;color:var(--mu);font-size:14px}
+.pill.active{background:var(--fill);color:#fff;border-color:var(--fill)}
+.pillhint{font-size:11.5px;color:var(--mu);margin:0 0 9px}
+
+.cicon{font-size:16px;flex-shrink:0;line-height:1}
+
+/* view transitions: a soft horizontal slide between screens, not a plain crossfade */
+::view-transition-old(root){animation:vt-out .22s ease both}
+::view-transition-new(root){animation:vt-in .22s ease both}
+@keyframes vt-out{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-14px)}}
+@keyframes vt-in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){::view-transition-old(root),::view-transition-new(root){animation:none}}
 </style></head><body><main id="app"></main>
 <script>
 const $=s=>document.querySelector(s),K='te_data_v2',DK='te_draft_v1',
-TRV=['Metro','Namo Bharat Metro','Auto','Rapido','Uber','Train','Bus','Other'],
+TRV=['Metro','Namo Bharat Metro','Auto','Rapido','Uber','Train','Bus','Customer vehicle'],
 FOOD=['Breakfast','Lunch','Dinner','Snacks','Food'],
 PERS=[['Personal','Personal'],['Grocery','Grocery'],['Pother','Other']],
 PV=PERS.map(p=>p[0]),DESC=[...FOOD,...PV],
-PAY={upi:'UPI',cc:'Credit card',cash:'Cash',metro:'Metro card'};
+PAY={upi:'UPI',cc:'Credit card',cash:'Cash',metro:'Metro card'},
+ICON={'Metro':'🚇','Namo Bharat Metro':'🚄','Auto':'🛺','Rapido':'🏍️','Uber':'🚕','Train':'🚆','Bus':'🚌','Customer vehicle':'🚗',
+ 'Breakfast':'🍳','Lunch':'🍱','Dinner':'🍽️','Snacks':'🍪','Food':'🍴','Personal':'🧴','Grocery':'🛒','Pother':'🏷️'},
+icon=c=>ICON[c]||'💳';
+function nav(fn){const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ if(document.startViewTransition&&!reduced)document.startViewTransition(fn);else fn()}
 let D=JSON.parse(localStorage.getItem(K)||migrate()||'{"trips":[],"cust":{}}'),
  draft=JSON.parse(localStorage.getItem(DK)||'null'),cur=null,eid=null,last={pay:'upi',date:''};
 function migrate(){return localStorage.getItem('te_data')}
@@ -105,7 +141,7 @@ inr=n=>'₹'+(Math.round(n*100)/100).toLocaleString('en-IN'),today=()=>new Date(
 diff=t=>t.start&&t.end?Math.round((new Date(t.end)-new Date(t.start))/864e5):0,
 days=t=>t.days??Math.max(1,diff(t)),
 catLbl=c=>(PERS.find(p=>p[0]==c)||[0,c])[1],
-desc=l=>DESC.includes(l.cat)?catLbl(l.cat)+(l.det?` — ${l.det}`:''):(l.from||l.to?`${l.cat}: ${l.from||'?'} → ${l.to||'?'}`:l.cat),
+desc=l=>DESC.includes(l.cat)?catLbl(l.cat)+(l.det?` — ${l.det}`:''):(l.from||l.to?`${l.cat} from ${l.from||'?'} to ${l.to||'?'}`:l.cat),
 lineSaved=l=>Math.round(((l.eff!=null?l.amt-l.eff:(l.saved||0)))*100)/100;
 
 function calc(t){
@@ -128,70 +164,82 @@ function home(){
  if(draft&&isEmptyDraft(draft)){draft=null;localStorage.removeItem(DK)}
  cur=null;const has=D.trips.length;
  $('#app').innerHTML=`<h1>Site Ledger</h1>
- <button class=p onclick=nt()>+ New site visit</button>
- ${draft?`<div class="cd draftcard" onclick="op(${draft.id})">
+ ${draft?`<div class="cd draftcard" onclick="nav(()=>op(${draft.id}))">
    <div class=draftrow><div><b>${esc(draft.customer||'Unsaved visit')}</b>
      <div class=mu>${esc(draft.dest||'Draft — tap to continue')}</div></div>
     <a class=b onclick="event.stopPropagation();discardDraft()">Discard</a></div>
    <span class=tag style="background:color-mix(in srgb,var(--am) 18%,transparent);color:var(--am)">DRAFT · NOT SAVED</span></div>`:''}
  ${has?D.trips.slice().reverse().map(t=>{const c=calc(t);return`
-  <div class="cd stub" onclick="op(${t.id})">
+  <div class="cd stub" onclick="nav(()=>op(${t.id}))">
    <div class=main><div class=dest>${esc(t.customer||'Untitled visit')}</div>
     <div class=mu>${esc(t.dest||'No destination yet')}${t.start?' · '+t.start:''}</div>
     <span class="tag ${t.type}">${t.type=='out'?'Outstation':'In-city'}</span></div>
    <div class=tail><div class=amt>${inr(c.total)}</div><div class=amtlbl>Receivable</div></div>
-  </div>`}).join(''):(draft?'':'<div class="cd empty">No site visits yet.<br>Add one before you leave.</div>')}
- <p class=mu style="text-align:center;margin-top:18px"><a class=b onclick=bk()>Back up data</a> &nbsp;·&nbsp; <a class=b onclick="$('#f').click()">Restore backup</a><input id=f type=file accept=.json hidden onchange=rs(event)></p>`}
+  </div>`}).join(''):(draft?'':'<div class="cd empty">No site visits yet.<br>Tap + to add one before you leave.</div>')}
+ <p class=mu style="text-align:center;margin-top:18px"><a class=b onclick=bk()>Back up data</a> &nbsp;·&nbsp; <a class=b onclick="$('#f').click()">Restore backup</a><input id=f type=file accept=.json hidden onchange=rs(event)></p>
+ <button class=fab onclick=nt() aria-label="New site visit">+</button>`}
 
 function nt(){
- if(draft&&!isEmptyDraft(draft)){op(draft.id);return}
+ if(draft&&!isEmptyDraft(draft)){nav(()=>op(draft.id));return}
  draft={id:Date.now(),customer:'',ips:'',dest:'',purpose:'',teNo:'',type:'in',start:today(),end:today(),days:null,lines:[],saved:false};
- saveDraft();op(draft.id)}
+ saveDraft();nav(()=>op(draft.id))}
 
 function commitDraft(){if(!draft)return;draft.saved=true;D.trips.push(draft);save();localStorage.removeItem(DK);const id=draft.id;draft=null;op(id)}
-function discardDraft(){draft=null;localStorage.removeItem(DK);if(cur&&cur.saved===false)cur=null;home()}
+function discardDraft(){draft=null;localStorage.removeItem(DK);if(cur&&cur.saved===false)cur=null;nav(home)}
 
 function op(id){cur=(draft&&draft.id==id)?draft:D.trips.find(t=>t.id==id);eid=null;const t=cur,isDraft=t.saved===false,
  I=(k,l,ty='text',x='')=>`<div><label>${l}</label><input ${x} type=${ty} value="${esc(t[k])}" oninput="S('${k}',this.value)"></div>`;
- $('#app').innerHTML=`<a class="b back" onclick=home()>‹ All visits</a><h2>${esc(t.customer||'New site visit')}</h2>
+ $('#app').innerHTML=`<a class="b back" onclick="nav(home)">‹ All visits</a><h2>${esc(t.customer||'New site visit')}</h2>
  ${isDraft?`<div class="cd savebar"><div class=mu style="margin-bottom:8px">Not saved yet — your entries are kept safely as a draft, but this won't appear in your visit list until you save it.</div><button class=p onclick=commitDraft()>✓ Save visit</button></div>`:''}
  <div class=cd>
   <div class=r>${I('customer','Customer','text','list=cl')}${I('ips','IPS number')}</div><datalist id=cl>${Object.keys(D.cust).map(c=>`<option>${esc(c)}`).join('')}</datalist>
   <div class=r>${I('dest','Destination')}${I('purpose','Purpose')}</div>
-  <div class=r><div><label>Trip type</label><select onchange="S('type',this.value)">
-   <option value=in ${t.type=='in'?'selected':''}>In-city (under 150 km)<option value=out ${t.type=='out'?'selected':''}>Outstation</select></div>
-   ${I('teNo','TE number')}</div>
+  <div><label>Trip type</label><div class=pillgroup>
+   <button type=button class="pill${t.type=='in'?' active':''}" onclick="S('type','in')">In-city</button>
+   <button type=button class="pill${t.type=='out'?' active':''}" onclick="S('type','out')">Outstation</button>
+  </div><div class=pillhint>${t.type=='in'?'Under 150 km from Delhi':'Over 150 km from Delhi'}</div></div>
+  <div class=r>${I('teNo','TE number')}</div>
   <div class=r>${I('start','Start','date')}${I('end','End','date')}</div>
   <div><label>Days</label><input type=number min=1 id=dy placeholder="${Math.max(1,diff(t))}" value="${t.days??''}" oninput="S('days',this.value===''?null:+this.value)"></div>
  </div>
  <div id=sum></div>
- <div class=cd>
-  <div class=formhead><label style="margin:0">${eid?'Edit expense':'Add expense'}</label>${eid?'<span class=cancel onclick=cc()>Cancel</span>':''}</div>
+ <div id=ls></div>
+ <button class=p onclick=xl()>Download TE Excel</button>
+ <p style="text-align:center"><a class=b onclick=dt()>${isDraft?'Discard draft':'Delete this visit'}</a></p>
+ <button class=fab onclick=openSheet() aria-label="Add expense">+</button>
+ <div class=backdrop id=backdrop onclick=closeSheet()></div>
+ <div class=sheet id=sheet>
+  <div class=sheet-handle></div>
+  <div class=formhead><label style="margin:0" id=sheetTitle>Add expense</label><span class=cancel onclick=closeSheet()>✕</span></div>
   <select id=cat onchange=tg()>
    <optgroup label="Travel">${TRV.map(c=>`<option>${c}`).join('')}</optgroup>
    <optgroup label="Food">${FOOD.map(c=>`<option>${c}`).join('')}</optgroup>
    <optgroup label="Personal">${PERS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</optgroup>
   </select>
-  <input id=dt type=date value="${last.date||t.start}">
+  <input id=dt type=date value="${last.date||t.start}" oninput="if(!$('#md').checked)$('#dt2').value=this.value">
+  <label class=chk><input type=checkbox id=md onchange=toggleMd()><span class=box></span><span>Spans multiple days (long train journeys)</span></label>
+  <div id=dt2wrap hidden><label>Arrival date</label><input id=dt2 type=date></div>
   <div class=r id=tr><input id=fr placeholder="From"><input id=to placeholder="To"></div>
   <input id=det placeholder="Details (optional)" hidden>
-  <div class=r><input id=amt type=number min=0 inputmode=decimal placeholder="Bill amount ₹" oninput=svhint()><input id=eff type=number min=0 inputmode=decimal placeholder="Effective cost ₹" oninput=svhint()></div>
+  <div class=r><input id=amt type=number min=0 inputmode=decimal placeholder="Bill amount ₹ (blank = free)" oninput=svhint()><input id=eff type=number min=0 inputmode=decimal placeholder="Effective cost ₹" oninput=svhint()></div>
   <div id=svh class=svhint></div>
   <select id=pay>${Object.entries(PAY).map(([k,v])=>`<option value=${k} ${k==last.pay?'selected':''}>${v}`).join('')}</select>
   <label class=chk><input type=checkbox id=bl><span class=box></span><span>Bill attached</span></label>
-  <button class=p id=ab onclick=al()>${eid?'Save changes':'Add expense'}</button>
- </div>
- <div id=ls></div>
- <button class=p onclick=xl()>Download TE Excel</button>
- <p style="text-align:center"><a class=b onclick=dt()>${isDraft?'Discard draft':'Delete this visit'}</a></p>`;tg();rf()}
+  <button class=p id=ab onclick=al()>Add expense</button>
+ </div>`;tg();rf()}
+
+function openSheet(){$('#backdrop').classList.add('show');$('#sheet').classList.add('show');document.body.style.overflow='hidden'}
+function closeSheet(){$('#backdrop').classList.remove('show');$('#sheet').classList.remove('show');document.body.style.overflow='';
+ if(eid)cc()}
 
 function S(k,v){cur[k]=v;if(k=='customer'&&D.cust[v]){cur.ips=D.cust[v];op(cur.id);return}
  if(k=='ips'&&cur.customer)D.cust[cur.customer]=v;persist();
  if(k=='type'){op(cur.id);return}
  if(['start','end','days'].includes(k))$('#dy').placeholder=Math.max(1,diff(cur));
- if(k=='start'){last.date=v;const dtEl=$('#dt');if(dtEl)dtEl.value=v}
+ if(k=='start'){last.date=v;const dtEl=$('#dt');if(dtEl){dtEl.value=v;if(!$('#md').checked)$('#dt2').value=v}}
  rf()}
 function tg(){const d=DESC.includes($('#cat').value);$('#tr').hidden=d;$('#det').hidden=!d}
+function toggleMd(){const on=$('#md').checked;$('#dt2wrap').hidden=!on;if(on){if(!$('#dt2').value)$('#dt2').value=$('#dt').value}else{$('#dt2').value=$('#dt').value}}
 function cc(){eid=null;op(cur.id)}
 function svhint(){const a=+$('#amt').value||0,ev=$('#eff').value,e=ev===''?null:+ev,h=$('#svh');
  if(e==null||!a){h.textContent='';h.className='svhint mu';return}
@@ -223,8 +271,8 @@ function rf(){const t=cur,c=calc(t);
     <button class=danger onclick="dl(${l.id});closeMenus()">🗑 Delete</button>
     <button onclick="closeMenus()">✕ Cancel</button>
    </div>
-   <div class=top><span class=desc>${esc(desc(l))}</span><span class=dots></span><span class=amt>${inr(l.amt)}</span></div>
-   <div class=meta>${l.date} · ${PAY[l.pay]}${r.bill?` · bill ${r.bill}`:''}${sv?` · saved ${inr(sv)}`:''}</div>
+   <div class=top><span class=cicon>${icon(l.cat)}</span><span class=desc>${esc(desc(l))}</span><span class=dots></span><span class=amt>${inr(l.amt)}</span></div>
+   <div class=meta>${l.toDate&&l.toDate!==l.date?`${l.date} → ${l.toDate}`:l.date} · ${PAY[l.pay]}${r.bill?` · bill ${r.bill}`:''}${sv?` · saved ${inr(sv)}`:''}</div>
    ${!r.excel?`<div class=warn>${PV.includes(l.cat)?'Personal spend — in your ledger, not the Excel':'Outstation food — in your ledger, not the Excel'}</div>`:''}
   </div>`}).join(''):'<div class="cd empty">No expenses logged yet.</div>'}
 
@@ -238,25 +286,26 @@ function toggleMenu(e,id){e.stopPropagation();const m=$('#menu-'+id),willOpen=m.
 function closeMenus(){document.querySelectorAll('.menu').forEach(m=>m.hidden=true)}
 document.addEventListener('click',closeMenus);
 
-function al(){const amt=+$('#amt').value;if(!(amt>0))return $('#amt').focus();
- const ev=$('#eff').value,eff=ev===''?null:+ev;
- const l={id:eid||Date.now(),date:$('#dt').value,cat:$('#cat').value,from:$('#fr').value.trim(),to:$('#to').value.trim(),det:$('#det').value.trim(),amt,eff,pay:$('#pay').value,bill:$('#bl').checked};
+function al(){const av=$('#amt').value,amt=av===''?0:+av;if(amt<0||isNaN(amt))return $('#amt').focus();
+ const ev=$('#eff').value,eff=ev===''?null:+ev,md=$('#md').checked,toDate=md&&$('#dt2').value?$('#dt2').value:$('#dt').value;
+ const l={id:eid||Date.now(),date:$('#dt').value,toDate,cat:$('#cat').value,from:$('#fr').value.trim(),to:$('#to').value.trim(),det:$('#det').value.trim(),amt,eff,pay:$('#pay').value,bill:$('#bl').checked};
  const i=cur.lines.findIndex(x=>x.id==l.id);i<0?cur.lines.push(l):cur.lines[i]=l;
  last={pay:l.pay,date:l.date};persist();
  const wasEdit=!!eid,to=l.to;eid=null;
- $('#ab').textContent='Add expense';document.querySelector('.formhead label').textContent='Add expense';
- const cf=document.querySelector('.formhead .cancel');if(cf)cf.remove();
- ['amt','eff','det','to'].forEach(k=>$('#'+k).value='');$('#fr').value=wasEdit?'':to;$('#bl').checked=false;svhint();
- rf()}
+ $('#ab').textContent='Add expense';$('#sheetTitle').textContent='Add expense';
+ ['amt','eff','det','to'].forEach(k=>$('#'+k).value='');$('#fr').value=wasEdit?'':to;$('#bl').checked=false;
+ $('#md').checked=false;$('#dt2wrap').hidden=true;$('#dt2').value=$('#dt').value;svhint();
+ rf();if(wasEdit)closeSheet()}
 function ed(id){closeMenus();const l=cur.lines.find(x=>x.id==id);eid=id;
  $('#cat').value=l.cat;tg();$('#dt').value=l.date;$('#fr').value=l.from;$('#to').value=l.to;$('#det').value=l.det;
- $('#amt').value=l.amt;$('#eff').value=l.eff!=null?l.eff:'';$('#pay').value=l.pay;$('#bl').checked=l.bill;svhint();
- $('#ab').textContent='Save changes';const fh=document.querySelector('.formhead');fh.querySelector('label').textContent='Edit expense';
- if(!fh.querySelector('.cancel'))fh.insertAdjacentHTML('beforeend','<span class=cancel onclick=cc()>Cancel</span>');
- rf();window.scrollTo({top:document.querySelectorAll('.cd')[1]?.offsetTop-8||0,behavior:'smooth'})}
-function dl(id){closeMenus();if(eid==id)eid=null;cur.lines=cur.lines.filter(x=>x.id!=id);persist();
- $('#ab').textContent='Add expense';const cf=document.querySelector('.formhead .cancel');if(cf)cf.remove();document.querySelector('.formhead label').textContent='Add expense';
+ $('#amt').value=l.amt;$('#eff').value=l.eff!=null?l.eff:'';$('#pay').value=l.pay;$('#bl').checked=l.bill;
+ const spans=l.toDate&&l.toDate!==l.date;$('#md').checked=spans;$('#dt2wrap').hidden=!spans;$('#dt2').value=l.toDate||l.date;svhint();
+ $('#ab').textContent='Save changes';$('#sheetTitle').textContent='Edit expense';
+ openSheet()}
+function dl(id){closeMenus();if(eid==id){eid=null;closeSheetSilent()}cur.lines=cur.lines.filter(x=>x.id!=id);persist();
  rf()}
+function closeSheetSilent(){$('#backdrop').classList.remove('show');$('#sheet').classList.remove('show');document.body.style.overflow='';
+ $('#ab').textContent='Add expense';$('#sheetTitle').textContent='Add expense'}
 function dt(){if(cur.saved===false)return discardDraft();
  if(confirm('Delete this whole visit? This cannot be undone.')){D.trips=D.trips.filter(x=>x!=cur);save();home()}}
 function bk(){dw(new Blob([JSON.stringify(D)]),`te-backup-${today()}.json`)}
@@ -271,7 +320,7 @@ async function xl(){const t=cur,c=calc(t),U=s=>s?new Date(Date.UTC(+s.slice(0,4)
   [`C${a}:D${a}`,`C${a+1}:D${a+1}`,`C${a+2}:D${a+2}`,`E${a+1}:F${a+1}`,`E${a+2}:F${a+2}`].forEach(m=>ws.mergeCells(m))}
  ws.getCell('C2').value=t.dest;ws.getCell('F2').value=t.purpose;ws.getCell('C3').value=t.customer;ws.getCell('C4').value=t.ips;ws.getCell('F4').value=days(t);
  ws.getCell('C5').value=U(t.start);ws.getCell('C5').numFmt=F;ws.getCell('F5').value=U(t.end);ws.getCell('F5').numFmt=F;ws.getCell('C6').value=t.teNo.trim();
- rows.forEach((r,i)=>{const R=ws.getRow(11+i);[1,2].forEach(k=>{R.getCell(k).value=U(r.l.date);R.getCell(k).numFmt=F});R.getCell(3).value=desc(r.l);R.getCell(4).value=r.bill||null;R.getCell(6).value=r.l.amt});
+ rows.forEach((r,i)=>{const R=ws.getRow(11+i);R.getCell(1).value=U(r.l.date);R.getCell(1).numFmt=F;R.getCell(2).value=U(r.l.toDate||r.l.date);R.getCell(2).numFmt=F;R.getCell(3).value=desc(r.l);R.getCell(4).value=r.bill||null;R.getCell(6).value=r.l.amt});
  ws.getCell(`E${a}`).value={formula:`SUM(E11:E${a-1})`,result:0};ws.getCell(`F${a}`).value={formula:`SUM(F11:F${a-1})`,result:c.claim};
  ws.getCell(`E${a+1}`).value={formula:`E${a}+F${a}`,result:c.claim};ws.getCell(`E${a+2}`).value={formula:`F${a}-C7`,result:c.claim};
  wb.calcProperties.fullCalcOnLoad=true;dw(new Blob([await wb.xlsx.writeBuffer()]),`TE_${(t.customer||'trip').replace(/\W+/g,'_')}_${t.start}.xlsx`)}
